@@ -6,21 +6,46 @@
 #include "HeadMountedDisplayFunctionLibrary.h"
 #include "MobaCharacter.h"
 #include "Engine/World.h"
+#include "CameraPawn.h"
 
 AMobaPlayerController::AMobaPlayerController()
 {
 	bShowMouseCursor = true;
-	DefaultMouseCursor = EMouseCursor::Crosshairs;
+	DefaultMouseCursor = EMouseCursor::Default;
+}
+
+void AMobaPlayerController::BeginPlay()
+{
+	Super::BeginPlay();
+	CameraPawn = GetWorld()->SpawnActor<ACameraPawn>(ACameraPawn::StaticClass(), GetPawn()->GetActorTransform());
+	SetViewTarget(CameraPawn);
+}
+
+void AMobaPlayerController::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+	//FHitResult Hit;
+	//GetHitResultUnderCursor(ECC_Visibility, false, Hit);
+	//CameraPawn->GetCursorToWorld()->SetWorldLocation(Hit.Location);
+	//CameraPawn->GetCursorToWorld()->SetWorldRotation(Hit.ImpactNormal.Rotation());
+	//if (bMoveToMouseCursor)
+	//{
+	//	MoveToMouseCursor(Hit);
+	//}
 }
 
 void AMobaPlayerController::PlayerTick(float DeltaTime)
 {
 	Super::PlayerTick(DeltaTime);
-
+	//CameraPawn->SetActorLocation(GetPawn()->GetActorTransform().GetLocation());
+	FHitResult Hit;
+	GetHitResultUnderCursor(ECC_Visibility, false, Hit);
+	CameraPawn->GetCursorToWorld()->SetWorldLocation(Hit.Location);
+	CameraPawn->GetCursorToWorld()->SetWorldRotation(Hit.ImpactNormal.Rotation());
 	// keep updating the destination every tick while desired
 	if (bMoveToMouseCursor)
 	{
-		MoveToMouseCursor();
+		MoveToMouseCursor(Hit);
 	}
 }
 
@@ -44,29 +69,12 @@ void AMobaPlayerController::OnResetVR()
 	UHeadMountedDisplayFunctionLibrary::ResetOrientationAndPosition();
 }
 
-void AMobaPlayerController::MoveToMouseCursor()
+void AMobaPlayerController::MoveToMouseCursor(const FHitResult& Hit)
 {
-	if (UHeadMountedDisplayFunctionLibrary::IsHeadMountedDisplayEnabled())
+	if (Hit.bBlockingHit)
 	{
-		if (AMobaCharacter* MyPawn = Cast<AMobaCharacter>(GetPawn()))
-		{
-			if (MyPawn->GetCursorToWorld())
-			{
-				UAIBlueprintHelperLibrary::SimpleMoveToLocation(this, MyPawn->GetCursorToWorld()->GetComponentLocation());
-			}
-		}
-	}
-	else
-	{
-		// Trace to see what is under the mouse cursor
-		FHitResult Hit;
-		GetHitResultUnderCursor(ECC_Visibility, false, Hit);
-
-		if (Hit.bBlockingHit)
-		{
-			// We hit something, move there
-			SetNewMoveDestination(Hit.ImpactPoint);
-		}
+		// We hit something, move there
+		SetNewMoveDestination(Hit.ImpactPoint);
 	}
 }
 

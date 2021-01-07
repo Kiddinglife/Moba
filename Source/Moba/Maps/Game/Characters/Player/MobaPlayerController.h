@@ -13,11 +13,13 @@ class AMobaPlayerController : public APlayerController
 
 public:
 	AMobaPlayerController();
+	virtual void BeginPlay() override;
+	virtual void Tick(float DeltaTime) override;
 
 protected:
 	/** True if the controlled character should navigate to the mouse cursor. */
 	uint32 bMoveToMouseCursor : 1;
-
+	
 	// Begin PlayerController interface
 	virtual void PlayerTick(float DeltaTime) override;
 	virtual void SetupInputComponent() override;
@@ -27,7 +29,7 @@ protected:
 	void OnResetVR();
 
 	/** Navigate player to the current mouse cursor location. */
-	void MoveToMouseCursor();
+	void MoveToMouseCursor(const FHitResult& Hit);
 
 	/** Navigate player to the current touch location. */
 	void MoveToTouchLocation(const ETouchIndex::Type FingerIndex, const FVector Location);
@@ -38,6 +40,9 @@ protected:
 	/** Input handlers for SetDestination action. */
 	void OnSetDestinationPressed();
 	void OnSetDestinationReleased();
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	class ACameraPawn* CameraPawn;
 };
 
 
