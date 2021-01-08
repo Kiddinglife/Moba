@@ -4,7 +4,21 @@
 #include "Characters/Player/MobaPlayerController.h"
 #include "Characters/Player/MobaCharacter.h"
 #include "UObject/ConstructorHelpers.h"
+#include "Camera/CameraActor.h"
+#include "Kismet/GameplayStatics.h"
 
+/*
+PlayAsClient 1
+LogTemp: Warning: 1 AMobaGameMode NM_Standalone
+LogTemp: Warning: 2 AMobaGameMode ROLE_Authority
+LogTemp: Warning: 1  AMobaGameMode BeginPlay NM_DedicatedServer
+LogTemp: Warning: 2 AMobaGameMode BeginPlay ROLE_Authority
+PlayAsClient 2
+LogTemp: Warning: 1 AMobaGameMode NM_Standalone
+LogTemp: Warning: 2 AMobaGameMode ROLE_Authority
+LogTemp: Warning: 1  AMobaGameMode BeginPlay NM_DedicatedServer
+LogTemp: Warning: 2 AMobaGameMode BeginPlay ROLE_Authority
+*/
 AMobaGameMode::AMobaGameMode()
 {
 	// use our custom PlayerController class
@@ -16,4 +30,92 @@ AMobaGameMode::AMobaGameMode()
 	{
 		DefaultPawnClass = PlayerPawnBPClass.Class;
 	}
+
+	/*if (GetNetMode() == NM_Client)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "1  AMobaGameMode NM_Client");
+		UE_LOG(LogTemp, Warning, TEXT("1  AMobaGameMode NM_Client"));
+	}
+	if (GetNetMode() == NM_DedicatedServer)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "1  AMobaGameMode NM_DedicatedServer");
+		UE_LOG(LogTemp, Warning, TEXT("1  AMobaGameMode NM_DedicatedServer"));
+	}
+	if (GetNetMode() == NM_Standalone)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "1 AMobaGameMode NM_Standalone");
+		UE_LOG(LogTemp, Warning, TEXT("1 AMobaGameMode NM_Standalone"));
+	}
+	if (GetNetMode() == NM_ListenServer)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "1 AMobaGameMode NM_ListenServer");
+		UE_LOG(LogTemp, Warning, TEXT("1 AMobaGameMode NM_ListenServer"));
+	}
+	if (GetLocalRole() == ROLE_AutonomousProxy)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "2  AMobaGameMode ROLE_AutonomousProxy");
+		UE_LOG(LogTemp, Warning, TEXT("2  AMobaGameMode ROLE_AutonomousProxy"));
+	}
+	if (GetLocalRole() == ROLE_Authority)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "2 AMobaGameMode ROLE_Authority");
+		UE_LOG(LogTemp, Warning, TEXT("2 AMobaGameMode ROLE_Authority"));
+	}
+	if (GetLocalRole() == ROLE_SimulatedProxy)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "2 AMobaGameMode ROLE_SimulatedProxy");
+		UE_LOG(LogTemp, Warning, TEXT("2 AMobaGameMode ROLE_SimulatedProxy"));
+	}*/
+}
+
+void AMobaGameMode::BeginPlay()
+{
+	Super::BeginPlay();
+
+	TArray<AActor*> FoundActors;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ACameraActor::StaticClass(), FoundActors);
+	for (AActor* poCameraActor : FoundActors)
+	{
+		if (poCameraActor->GetName().Contains(TEXT("CameraActor")))
+		{
+			poCameraActor->Destroy();
+			break;
+		}
+	}
+
+	/*if (GetNetMode() == NM_Client)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "1  AMobaGameMode BeginPlay NM_Client");
+		UE_LOG(LogTemp, Warning, TEXT("1  AMobaGameMode BeginPlay NM_Client"));
+	}
+	if (GetNetMode() == NM_DedicatedServer)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "1  AMobaGameMode BeginPlay NM_DedicatedServer");
+		UE_LOG(LogTemp, Warning, TEXT("1  AMobaGameMode BeginPlay NM_DedicatedServer"));
+	}
+	if (GetNetMode() == NM_Standalone)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "1 AMobaGameMode BeginPlay NM_Standalone");
+		UE_LOG(LogTemp, Warning, TEXT("1 AMobaGameMode BeginPlay NM_Standalone"));
+	}
+	if (GetNetMode() == NM_ListenServer)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "1 AMobaGameMode BeginPlay NM_ListenServer");
+		UE_LOG(LogTemp, Warning, TEXT("1 AMobaGameMode BeginPlay NM_ListenServer"));
+	}
+	if (GetLocalRole() == ROLE_AutonomousProxy)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "2  AMobaGameMode BeginPlay ROLE_AutonomousProxy");
+		UE_LOG(LogTemp, Warning, TEXT("2  AMobaGameMode BeginPlay ROLE_AutonomousProxy"));
+	}
+	if (GetLocalRole() == ROLE_Authority)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "2 AMobaGameMode BeginPlay ROLE_Authority");
+		UE_LOG(LogTemp, Warning, TEXT("2 AMobaGameMode BeginPlay ROLE_Authority"));
+	}
+	if (GetLocalRole() == ROLE_SimulatedProxy)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "2 AMobaGameMode BeginPlay ROLE_SimulatedProxy");
+		UE_LOG(LogTemp, Warning, TEXT("2 AMobaGameMode BeginPlay ROLE_SimulatedProxy"));
+	}*/
 }

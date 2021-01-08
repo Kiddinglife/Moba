@@ -15,11 +15,15 @@ public:
 	AMobaPlayerController();
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
+	void InitCamera(const FVector& t);
+
+	/** True if the camera has been Inited */
+	uint32 bCameraInited : 1;
 
 protected:
 	/** True if the controlled character should navigate to the mouse cursor. */
 	uint32 bMoveToMouseCursor : 1;
-	
+
 	// Begin PlayerController interface
 	virtual void PlayerTick(float DeltaTime) override;
 	virtual void SetupInputComponent() override;

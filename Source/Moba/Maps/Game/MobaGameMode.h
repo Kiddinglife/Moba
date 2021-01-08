@@ -13,6 +13,7 @@ class AMobaGameMode : public AGameModeBase
 
 public:
 	AMobaGameMode();
+	virtual void BeginPlay() override;
 };
 
 

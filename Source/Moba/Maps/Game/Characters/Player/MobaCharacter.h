@@ -13,6 +13,7 @@ class AMobaCharacter : public ACharacter
 
 public:
 	AMobaCharacter();
+	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaSeconds) override;
 };
 
