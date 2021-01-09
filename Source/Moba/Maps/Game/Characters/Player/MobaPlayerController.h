@@ -15,7 +15,7 @@ public:
 	AMobaPlayerController();
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
-	void InitCamera(const FVector& t);
+	//void InitCamera(const FVector& t);
 
 	/** True if the camera has been Inited */
 	uint32 bCameraInited : 1;
@@ -31,6 +31,7 @@ protected:
 
 	/** Resets HMD orientation in VR. */
 	void OnResetVR();
+	virtual void OnPossess(APawn* InPawn) override;
 
 	/** Navigate player to the current mouse cursor location. */
 	void MoveToMouseCursor(const FHitResult& Hit);
@@ -47,6 +48,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class ACameraPawn* CameraPawn;
+
+	void InitCamera();
+	void ShowNetModeAndRole(const FString& str, bool bOnScreenMsg = false);
 };
 
 

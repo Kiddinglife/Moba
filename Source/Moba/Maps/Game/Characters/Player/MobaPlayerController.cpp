@@ -9,6 +9,7 @@
 #include "CameraPawn.h"
 #include "Camera/CameraActor.h"
 #include "Kismet/GameplayStatics.h"
+#include "GameFramework/PlayerStart.h"
 
 /*
 PlayAsClient 1
@@ -111,102 +112,8 @@ AMobaPlayerController::AMobaPlayerController()
 void AMobaPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
-
-	if (GetNetMode() == NM_Client)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "1  AMobaPlayerController BeginPlay NM_Client");
-		UE_LOG(LogTemp, Warning, TEXT("1  AMobaPlayerController BeginPlay NM_Client"));
-	}
-	if (GetNetMode() == NM_DedicatedServer)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "1  AMobaPlayerController BeginPlay NM_DedicatedServer");
-		UE_LOG(LogTemp, Warning, TEXT("1  AMobaPlayerController BeginPlay NM_DedicatedServer"));
-	}
-	if (GetNetMode() == NM_Standalone)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "1 AMobaPlayerController BeginPlay NM_Standalone");
-		UE_LOG(LogTemp, Warning, TEXT("1 AMobaPlayerController BeginPlay NM_Standalone"));
-	}
-	if (GetNetMode() == NM_ListenServer)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "1 AMobaPlayerController BeginPlay NM_ListenServer");
-		UE_LOG(LogTemp, Warning, TEXT("1 AMobaPlayerController BeginPlay NM_ListenServer"));
-	}
-	if (GetLocalRole() == ROLE_AutonomousProxy)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "2  AMobaPlayerControllerBeginPlay ROLE_AutonomousProxy");
-		UE_LOG(LogTemp, Warning, TEXT("2  AMobaPlayerController BeginPlay ROLE_AutonomousProxy"));
-	}
-	if (GetLocalRole() == ROLE_Authority)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "2 AMobaPlayerController BeginPlay ROLE_Authority");
-		UE_LOG(LogTemp, Warning, TEXT("2 AMobaPlayerController BeginPlay ROLE_Authority"));
-	}
-	if (GetLocalRole() == ROLE_SimulatedProxy)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "2 AMobaPlayerController BeginPlay ROLE_SimulatedProxy");
-		UE_LOG(LogTemp, Warning, TEXT("2 AMobaPlayerController BeginPlay ROLE_SimulatedProxy"));
-	}
-
-	TArray<AActor*> FoundActors;
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ACameraActor::StaticClass(), FoundActors);
-	for (AActor* poCameraActor : FoundActors)
-	{
-		if (poCameraActor->GetName().Contains(TEXT("CameraActor")))
-		{
-			GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, poCameraActor->GetName());
-			UE_LOG(LogTemp, Warning, TEXT("%s"), *(poCameraActor->GetName()));
-			poCameraActor->Destroy();
-			break;
-		}
-	}
-
-	// only spawn camera in client/listenserver mode
-	if (GetNetMode() != NM_DedicatedServer)
-	{
-		//CameraPawn = GetWorld()->SpawnActor<ACameraPawn>(ACameraPawn::StaticClass(), GetPawn()->GetActorTransform());
-		CameraPawn = GetWorld()->SpawnActor<ACameraPawn>(ACameraPawn::StaticClass());
-		//FTransform Transform;
-		//Transform.SetRotation(FQuat::MakeFromEuler({0.000042, -50.597729, 0.595521}));
-		//Transform.SetLocation({ -1379.584351, 7.022931, 947.442017 });
-		//CameraPawn = GetWorld()->SpawnActor<ACameraPawn>(ACameraPawn::StaticClass(), Transform);
-		SetViewTarget(CameraPawn);
-		/*if (GetNetMode() == NM_Client)
-		{
-			GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "1  AMobaPlayerController BeginPlay NM_Client");
-			UE_LOG(LogTemp, Warning, TEXT("1  AMobaPlayerController BeginPlay NM_Client"));
-		}
-		if (GetNetMode() == NM_DedicatedServer)
-		{
-			GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "1  AMobaPlayerController BeginPlay NM_DedicatedServer");
-			UE_LOG(LogTemp, Warning, TEXT("1  AMobaPlayerController BeginPlay NM_DedicatedServer"));
-		}
-		if (GetNetMode() == NM_Standalone)
-		{
-			GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "1 AMobaPlayerController BeginPlay NM_Standalone");
-			UE_LOG(LogTemp, Warning, TEXT("1 AMobaPlayerController BeginPlay NM_Standalone"));
-		}
-		if (GetNetMode() == NM_ListenServer)
-		{
-			GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "1 AMobaPlayerController BeginPlay NM_ListenServer");
-			UE_LOG(LogTemp, Warning, TEXT("1 AMobaPlayerController BeginPlay NM_ListenServer"));
-		}
-		if (GetLocalRole() == ROLE_AutonomousProxy)
-		{
-			GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "2  AMobaPlayerControllerBeginPlay ROLE_AutonomousProxy");
-			UE_LOG(LogTemp, Warning, TEXT("2  AMobaPlayerController BeginPlay ROLE_AutonomousProxy"));
-		}
-		if (GetLocalRole() == ROLE_Authority)
-		{
-			GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "2 AMobaPlayerController BeginPlay ROLE_Authority");
-			UE_LOG(LogTemp, Warning, TEXT("2 AMobaPlayerController BeginPlay ROLE_Authority"));
-		}
-		if (GetLocalRole() == ROLE_SimulatedProxy)
-		{
-			GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "2 AMobaPlayerController BeginPlay ROLE_SimulatedProxy");
-			UE_LOG(LogTemp, Warning, TEXT("2 AMobaPlayerController BeginPlay ROLE_SimulatedProxy"));
-		}*/
-	}
+	InitCamera();
+	//ShowNetModeAndRole("AMobaPlayerController BeginPlay");
 }
 
 void AMobaPlayerController::Tick(float DeltaTime)
@@ -306,13 +213,12 @@ void AMobaPlayerController::MoveToTouchLocation(const ETouchIndex::Type FingerIn
 
 void AMobaPlayerController::SetNewMoveDestination(const FVector DestLocation)
 {
-	APawn* const MyPawn = GetPawn();
+	AMobaCharacter* const MyPawn = Cast<AMobaCharacter>(GetPawn());
 	float const Distance = FVector::Dist(DestLocation, MyPawn->GetActorLocation());
 	// We need to issue move command only if far enough in order for walk animation to play correctly
 	if ((Distance > 120.0f))
 	{
 		UAIBlueprintHelperLibrary::SimpleMoveToLocation(this, DestLocation);
-		//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "SetNewMoveDestination");
 	}
 }
 
@@ -321,6 +227,15 @@ void AMobaPlayerController::OnSetDestinationPressed()
 	// set flag to keep updating destination until released
 	bMoveToMouseCursor = true;
 	//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "OnSetDestinationPressed");
+	//ShowNetModeAndRole("AMobaPlayerController::OnSetDestinationPressed");
+	//if (GetPawn())
+	//{
+	//	UE_LOG(LogTemp, Warning, TEXT(" AMobaPlayerController::InitCamera() GetPawn()->GetName() %s"), *(GetPawn()->GetName()));
+	//}
+	//else
+	//{
+	//	UE_LOG(LogTemp, Warning, TEXT(" AMobaPlayerController::InitCamera() GetPawn()->GetName() NOT EXIST"));
+	//}
 }
 
 void AMobaPlayerController::OnSetDestinationReleased()
@@ -329,11 +244,89 @@ void AMobaPlayerController::OnSetDestinationReleased()
 	bMoveToMouseCursor = false;
 }
 
-void AMobaPlayerController::InitCamera(const FVector& t)
+//void AMobaPlayerController::InitCamera(const FVector& t)
+//{
+//	if (CameraPawn)
+//	{
+//		CameraPawn->SetActorLocation(t);
+//		bCameraInited = true;
+//	}
+//}
+
+void AMobaPlayerController::InitCamera()
 {
-	if (CameraPawn)
+	// remove the default camera actor in the level as it is not used at all
+	TArray<AActor*> CameraActors;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ACameraActor::StaticClass(), CameraActors);
+	for (AActor* CameraActor : CameraActors)
 	{
-		CameraPawn->SetActorLocation(t);
-		bCameraInited = true;
+		if (CameraActor->GetName().Contains(TEXT("CameraActor")))
+		{
+			//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, CameraActor->GetName());
+			UE_LOG(LogTemp, Warning, TEXT(" AMobaPlayerController::InitCamera() Removed default camera %s"), *(CameraActor->GetName()));
+			check(CameraActor->Destroy());
+		}
 	}
+
+	// Only spawn camera in client/listenserver mode
+	if (GetNetMode() != NM_DedicatedServer)
+	{
+		TArray<AActor*> PlayerStartActor;
+		UGameplayStatics::GetAllActorsOfClass(GetWorld(), APlayerStart::StaticClass(), PlayerStartActor);
+		check(PlayerStartActor.Num() == 1);
+		//CameraPawn = GetWorld()->SpawnActor<ACameraPawn>(ACameraPawn::StaticClass(), GetPawn()->GetActorTransform());
+		CameraPawn = GetWorld()->SpawnActor<ACameraPawn>(ACameraPawn::StaticClass());
+		CameraPawn->SetActorLocation(PlayerStartActor[0]->GetActorLocation());
+		//FTransform Transform;
+		//Transform.SetRotation(FQuat::MakeFromEuler({0.000042, -50.597729, 0.595521}));
+		//Transform.SetLocation({ -1379.584351, 7.022931, 947.442017 });
+		//CameraPawn = GetWorld()->SpawnActor<ACameraPawn>(ACameraPawn::StaticClass(), Transform);
+		SetViewTarget(CameraPawn);
+	}
+}
+
+void AMobaPlayerController::ShowNetModeAndRole(const FString& str, bool bOnScreenMsg)
+{
+	if (GetNetMode() == NM_Client)
+	{
+		if(bOnScreenMsg) GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "1 " + str + " NM_Client");
+		UE_LOG(LogTemp, Warning, TEXT("1 %s NM_Client"), *str);
+	}
+	if (GetNetMode() == NM_DedicatedServer)
+	{
+		if (bOnScreenMsg) GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "1 " + str + " NM_DedicatedServer");
+		UE_LOG(LogTemp, Warning, TEXT("1 %s NM_DedicatedServer"), *str);
+	}
+	if (GetNetMode() == NM_Standalone)
+	{
+		if (bOnScreenMsg) GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "1 " + str + " NM_Standalone");
+		UE_LOG(LogTemp, Warning, TEXT("1 %s NM_Standalone"), *str);
+	}
+	if (GetNetMode() == NM_ListenServer)
+	{
+		if (bOnScreenMsg) GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "1 " + str + " NM_ListenServer");
+		UE_LOG(LogTemp, Warning, TEXT("1 %s NM_ListenServer"), *str);
+	}
+	if (GetLocalRole() == ROLE_AutonomousProxy)
+	{
+		if (bOnScreenMsg) GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "2  "+ str + " ROLE_AutonomousProxy");
+		UE_LOG(LogTemp, Warning, TEXT("2  %s ROLE_AutonomousProxy"), *str);
+	}
+	if (GetLocalRole() == ROLE_Authority)
+	{
+		if (bOnScreenMsg) GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "2 " + str + " ROLE_Authority");
+		UE_LOG(LogTemp, Warning, TEXT("2 %s ROLE_Authority"), *str);
+	}
+	if (GetLocalRole() == ROLE_SimulatedProxy)
+	{
+		if (bOnScreenMsg) GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "2 "+str+" ROLE_SimulatedProxy");
+		UE_LOG(LogTemp, Warning, TEXT("2 %s ROLE_SimulatedProxy"), *str);
+	}
+}
+
+void AMobaPlayerController::OnPossess(APawn* InPawn)
+{
+	Super::OnPossess(InPawn);
+	//ShowNetModeAndRole("AMobaPlayerController::OnPossess");
+	//UE_LOG(LogTemp, Warning, TEXT("InPawn name: %s"), *(InPawn->GetName()));
 }

@@ -72,14 +72,17 @@ void AMobaGameMode::BeginPlay()
 {
 	Super::BeginPlay();
 
-	TArray<AActor*> FoundActors;
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ACameraActor::StaticClass(), FoundActors);
-	for (AActor* poCameraActor : FoundActors)
+	// remove the default camera actor in the level as it is not used at all
+	TArray<AActor*> CameraActors;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ACameraActor::StaticClass(), CameraActors);
+	for (AActor* CameraActor : CameraActors)
 	{
-		if (poCameraActor->GetName().Contains(TEXT("CameraActor")))
+		if (CameraActor->GetName().Contains(TEXT("CameraActor")))
 		{
-			poCameraActor->Destroy();
-			break;
+			FString Msg = FString::Printf(TEXT("AMobaGameMode::BeginPlay Removed default camera %s"), *(CameraActor->GetName()));
+			//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, Msg);
+			UE_LOG(LogTemp, Warning, TEXT("%s"), *Msg);
+			check(CameraActor->Destroy());
 		}
 	}
 

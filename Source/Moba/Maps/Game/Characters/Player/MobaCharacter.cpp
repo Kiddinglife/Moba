@@ -13,6 +13,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "MobaPlayerController.h"
 #include "Engine/World.h"
+#include "Math/Vector.h"
 
 /*
 PlayAsListenServer 2
@@ -29,6 +30,7 @@ AMobaCharacter::AMobaCharacter()
 {
 	// Set size for player capsule
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
+	previousMovementVector = GetActorLocation();
 
 	// Don't rotate character to camera direction
 	bUseControllerRotationPitch = false;
@@ -49,53 +51,49 @@ AMobaCharacter::AMobaCharacter()
  void AMobaCharacter::BeginPlay()
 {
 	 Super::BeginPlay();
-	 if (GetNetMode() != NM_DedicatedServer)
-	 {
-		 AMobaPlayerController* MobaPlayerController = Cast<AMobaPlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
-		 if (!MobaPlayerController->bCameraInited)
-		 {
-			 MobaPlayerController->InitCamera(GetActorTransform().GetLocation());
-		 }
-	 }
-
-	/* if (GetNetMode() == NM_Client)
-	 {
-		 GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "1  AMobaCharacter BeginPlay NM_Client");
-		 UE_LOG(LogTemp, Warning, TEXT("1  AMobaCharacter BeginPlay NM_Client"));
-	 }
-	 if (GetNetMode() == NM_DedicatedServer)
-	 {
-		 GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "1  AMobaCharacter BeginPlay NM_DedicatedServer");
-		 UE_LOG(LogTemp, Warning, TEXT("1  AMobaCharacter BeginPlay NM_DedicatedServer"));
-	 }
-	 if (GetNetMode() == NM_Standalone)
-	 {
-		 GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "1 AMobaCharacter BeginPlay NM_Standalone");
-		 UE_LOG(LogTemp, Warning, TEXT("1 AMobaCharacter BeginPlay NM_Standalone"));
-	 }
-	 if (GetNetMode() == NM_ListenServer)
-	 {
-		 GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "1 AMobaCharacter BeginPlay NM_ListenServer");
-		 UE_LOG(LogTemp, Warning, TEXT("1 AMobaCharacter BeginPlay NM_ListenServer"));
-	 }
-	 if (GetLocalRole() == ROLE_AutonomousProxy)
-	 {
-		 GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "2  AMobaCharacter ROLE_AutonomousProxy");
-		 UE_LOG(LogTemp, Warning, TEXT("2  AMobaCharacter BeginPlay ROLE_AutonomousProxy"));
-	 }
-	 if (GetLocalRole() == ROLE_Authority)
-	 {
-		 GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "2 AMobaCharacter BeginPlay ROLE_Authority");
-		 UE_LOG(LogTemp, Warning, TEXT("2 AMobaCharacter BeginPlay ROLE_Authority"));
-	 }
-	 if (GetLocalRole() == ROLE_SimulatedProxy)
-	 {
-		 GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "2 AMobaCharacter BeginPlay ROLE_SimulatedProxy");
-		 UE_LOG(LogTemp, Warning, TEXT("2 AMobaCharacter BeginPlay ROLE_SimulatedProxy"));
-	 }*/
+	 //ShowNetModeAndRole("AMobaPlayerController::BeginPlay");
 }
 
 void AMobaCharacter::Tick(float DeltaSeconds)
 {
     Super::Tick(DeltaSeconds);
+}
+
+void AMobaCharacter::ShowNetModeAndRole(const FString& str, bool bOnScreenMsg)
+{
+	if (GetNetMode() == NM_Client)
+	{
+		if (bOnScreenMsg) GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "1 " + str + " NM_Client");
+		UE_LOG(LogTemp, Warning, TEXT("1 %s NM_Client"), *str);
+	}
+	if (GetNetMode() == NM_DedicatedServer)
+	{
+		if (bOnScreenMsg) GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "1 " + str + " NM_DedicatedServer");
+		UE_LOG(LogTemp, Warning, TEXT("1 %s NM_DedicatedServer"), *str);
+	}
+	if (GetNetMode() == NM_Standalone)
+	{
+		if (bOnScreenMsg) GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "1 " + str + " NM_Standalone");
+		UE_LOG(LogTemp, Warning, TEXT("1 %s NM_Standalone"), *str);
+	}
+	if (GetNetMode() == NM_ListenServer)
+	{
+		if (bOnScreenMsg) GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "1 " + str + " NM_ListenServer");
+		UE_LOG(LogTemp, Warning, TEXT("1 %s NM_ListenServer"), *str);
+	}
+	if (GetLocalRole() == ROLE_AutonomousProxy)
+	{
+		if (bOnScreenMsg) GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "2  " + str + " ROLE_AutonomousProxy");
+		UE_LOG(LogTemp, Warning, TEXT("2  %s ROLE_AutonomousProxy"), *str);
+	}
+	if (GetLocalRole() == ROLE_Authority)
+	{
+		if (bOnScreenMsg) GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "2 " + str + " ROLE_Authority");
+		UE_LOG(LogTemp, Warning, TEXT("2 %s ROLE_Authority"), *str);
+	}
+	if (GetLocalRole() == ROLE_SimulatedProxy)
+	{
+		if (bOnScreenMsg) GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "2 " + str + " ROLE_SimulatedProxy");
+		UE_LOG(LogTemp, Warning, TEXT("2 %s ROLE_SimulatedProxy"), *str);
+	}
 }
