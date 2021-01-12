@@ -15,7 +15,6 @@ public:
 	AMobaPlayerController();
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
-	//void InitCamera(const FVector& t);
 
 	/** True if the camera has been Inited */
 	uint32 bCameraInited : 1;
@@ -29,12 +28,10 @@ protected:
 	virtual void SetupInputComponent() override;
 	// End PlayerController interface
 
-	/** Resets HMD orientation in VR. */
-	void OnResetVR();
 	virtual void OnPossess(APawn* InPawn) override;
 
 	/** Navigate player to the current mouse cursor location. */
-	void MoveToMouseCursor(const FHitResult& Hit);
+	void MoveToMouseCursor();
 
 	/** Navigate player to the current touch location. */
 	void MoveToTouchLocation(const ETouchIndex::Type FingerIndex, const FVector Location);
@@ -46,11 +43,15 @@ protected:
 	void OnSetDestinationPressed();
 	void OnSetDestinationReleased();
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	//UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class ACameraPawn* CameraPawn;
+	//TWeakObjectPtr<class ACameraPawn> CameraPawn;
+	FHitResult Hit;
 
 	void InitCamera();
 	void ShowNetModeAndRole(const FString& str, bool bOnScreenMsg = false);
+	
+	void UpdateCameraView(float CursorSpeed);
 };
 
 

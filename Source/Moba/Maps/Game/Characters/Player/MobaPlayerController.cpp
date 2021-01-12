@@ -10,6 +10,7 @@
 #include "Camera/CameraActor.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/PlayerStart.h"
+#include "Blueprint/WidgetLayoutLibrary.h"
 
 /*
 PlayAsClient 1
@@ -71,49 +72,12 @@ AMobaPlayerController::AMobaPlayerController()
 	bShowMouseCursor = true;
 	DefaultMouseCursor = EMouseCursor::Default;
 	bAutoManageActiveCameraTarget = false;
-	bCameraInited = false;
-	//if (GetNetMode() == NM_Client)
-	//{
-	//	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "1  AMobaPlayerController NM_Client");
-	//	UE_LOG(LogTemp, Warning, TEXT("1  AMobaPlayerController NM_Client"));
-	//}
-	//if (GetNetMode() == NM_DedicatedServer)
-	//{
-	//	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "1  AMobaPlayerController NM_DedicatedServer");
-	//	UE_LOG(LogTemp, Warning, TEXT("1  AMobaPlayerController NM_DedicatedServer"));
-	//}
-	//if (GetNetMode() == NM_Standalone)
-	//{
-	//	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "1 AMobaPlayerController NM_Standalone");
-	//	UE_LOG(LogTemp, Warning, TEXT("1 AMobaPlayerController NM_Standalone"));
-	//}
-	//if (GetNetMode() == NM_ListenServer)
-	//{
-	//	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "1 AMobaPlayerController NM_ListenServer");
-	//	UE_LOG(LogTemp, Warning, TEXT("1 AMobaPlayerController NM_ListenServer"));
-	//}
-	//if (GetLocalRole() == ROLE_AutonomousProxy)
-	//{
-	//	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "2  AMobaPlayerController ROLE_AutonomousProxy");
-	//	UE_LOG(LogTemp, Warning, TEXT("2  AMobaPlayerController ROLE_AutonomousProxy"));
-	//}
-	//if (GetLocalRole() == ROLE_Authority)
-	//{
-	//	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "2 AMobaPlayerController ROLE_Authority");
-	//	UE_LOG(LogTemp, Warning, TEXT("2 AMobaPlayerController ROLE_Authority"));
-	//}
-	//if (GetLocalRole() == ROLE_SimulatedProxy)
-	//{
-	//	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "2 AMobaPlayerController ROLE_SimulatedProxy");
-	//	UE_LOG(LogTemp, Warning, TEXT("2 AMobaPlayerController ROLE_SimulatedProxy"));
-	//}
 }
 
 void AMobaPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 	InitCamera();
-	//ShowNetModeAndRole("AMobaPlayerController BeginPlay");
 }
 
 void AMobaPlayerController::Tick(float DeltaTime)
@@ -124,83 +88,40 @@ void AMobaPlayerController::Tick(float DeltaTime)
 void AMobaPlayerController::PlayerTick(float DeltaTime)
 {
 	Super::PlayerTick(DeltaTime);
-	/*if (GetNetMode() == NM_Client)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "1  NM_Client");
-	}
-	if (GetNetMode() == NM_DedicatedServer)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "1  NM_DedicatedServer");
-	}
-	if (GetNetMode() == NM_Standalone)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "1 NM_Standalone");
-	}
-	if (GetNetMode() == NM_ListenServer)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "1 NM_ListenServer");
-	}
-	if (GetLocalRole() == ROLE_AutonomousProxy)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "2  ROLE_AutonomousProxy");
-	}
-	if (GetLocalRole() == ROLE_Authority)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "2 ROLE_Authority");
-	}
-	if (GetLocalRole() == ROLE_SimulatedProxy)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "2 ROLE_SimulatedProxy");
-	}*/
-	
-	if (CameraPawn)
-	{
-		FHitResult Hit;
-		GetHitResultUnderCursor(ECC_Visibility, false, Hit);
-		//CameraPawn->SetActorLocation(GetPawn()->GetActorTransform().GetLocation());
-		CameraPawn->GetCursorToWorld()->SetWorldLocation(Hit.Location);
-		CameraPawn->GetCursorToWorld()->SetWorldRotation(Hit.ImpactNormal.Rotation());
-		// keep updating the destination every tick while desired
-		if (bMoveToMouseCursor)
-		{
-			MoveToMouseCursor(Hit);
-		}
-	}
+	if (!CameraPawn) return;
+	//CameraPawn->SetActorLocation(GetPawn()->GetActorTransform().GetLocation());
+	//CameraPawn->GetCursorToWorld()->SetWorldLocation(Hit.Location);
+	//CameraPawn->GetCursorToWorld()->SetWorldRotation(Hit.ImpactNormal.Rotation());
+	// keep updating the destination every tick while desired
+	int CursorSpeed = 2500;
+	UpdateCameraView(CursorSpeed* DeltaTime);
+	//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, FString::Printf(TEXT("%.2f"), DeltaTime));
+	MoveToMouseCursor();
 }
 
 void AMobaPlayerController::SetupInputComponent()
 {
 	// set up gameplay key bindings
 	Super::SetupInputComponent();
-
 	InputComponent->BindAction("SetDestination", IE_Pressed, this, &AMobaPlayerController::OnSetDestinationPressed);
 	InputComponent->BindAction("SetDestination", IE_Released, this, &AMobaPlayerController::OnSetDestinationReleased);
-
 	// support touch devices 
 	InputComponent->BindTouch(EInputEvent::IE_Pressed, this, &AMobaPlayerController::MoveToTouchLocation);
 	InputComponent->BindTouch(EInputEvent::IE_Repeat, this, &AMobaPlayerController::MoveToTouchLocation);
-
-	InputComponent->BindAction("ResetVR", IE_Pressed, this, &AMobaPlayerController::OnResetVR);
 }
 
-void AMobaPlayerController::OnResetVR()
+void AMobaPlayerController::MoveToMouseCursor()
 {
-	UHeadMountedDisplayFunctionLibrary::ResetOrientationAndPosition();
-}
-
-void AMobaPlayerController::MoveToMouseCursor(const FHitResult& Hit)
-{
-	if (Hit.bBlockingHit)
+	if (bMoveToMouseCursor)
 	{
-		// We hit something, move there
-		SetNewMoveDestination(Hit.ImpactPoint);
+		GetHitResultUnderCursor(ECC_Visibility, false, Hit);
+		if (Hit.bBlockingHit) SetNewMoveDestination(Hit.ImpactPoint);
 	}
 }
 
 void AMobaPlayerController::MoveToTouchLocation(const ETouchIndex::Type FingerIndex, const FVector Location)
 {
 	FVector2D ScreenSpaceLocation(Location);
-
 	// Trace to see what is under the touch location
 	FHitResult HitResult;
 	GetHitResultAtScreenPosition(ScreenSpaceLocation, CurrentClickTraceChannel, true, HitResult);
@@ -244,17 +165,9 @@ void AMobaPlayerController::OnSetDestinationReleased()
 	bMoveToMouseCursor = false;
 }
 
-//void AMobaPlayerController::InitCamera(const FVector& t)
-//{
-//	if (CameraPawn)
-//	{
-//		CameraPawn->SetActorLocation(t);
-//		bCameraInited = true;
-//	}
-//}
-
 void AMobaPlayerController::InitCamera()
 {
+	ShowNetModeAndRole("AMobaPlayerController::InitCamera", true);
 	// remove the default camera actor in the level as it is not used at all
 	TArray<AActor*> CameraActors;
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ACameraActor::StaticClass(), CameraActors);
@@ -262,8 +175,8 @@ void AMobaPlayerController::InitCamera()
 	{
 		if (CameraActor->GetName().Contains(TEXT("CameraActor")))
 		{
-			//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, CameraActor->GetName());
-			UE_LOG(LogTemp, Warning, TEXT(" AMobaPlayerController::InitCamera() Removed default camera %s"), *(CameraActor->GetName()));
+			GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, CameraActor->GetName());
+			//UE_LOG(LogTemp, Warning, TEXT(" AMobaPlayerController::InitCamera() Removed default camera %s"), *(CameraActor->GetName()));
 			check(CameraActor->Destroy());
 		}
 	}
@@ -275,21 +188,117 @@ void AMobaPlayerController::InitCamera()
 		UGameplayStatics::GetAllActorsOfClass(GetWorld(), APlayerStart::StaticClass(), PlayerStartActor);
 		check(PlayerStartActor.Num() == 1);
 		//CameraPawn = GetWorld()->SpawnActor<ACameraPawn>(ACameraPawn::StaticClass(), GetPawn()->GetActorTransform());
-		CameraPawn = GetWorld()->SpawnActor<ACameraPawn>(ACameraPawn::StaticClass());
+		//CameraPawn = GetWorld()->SpawnActor<ACameraPawn>(ACameraPawn::StaticClass());
+		CameraPawn = GetWorld()->SpawnActorDeferred<ACameraPawn>(ACameraPawn::StaticClass(), FTransform::Identity, this);
+		CameraPawn->SetReplicates(false);
+		CameraPawn->bNetLoadOnClient = false;
+		CameraPawn->SetReplicatingMovement(false);
+		CameraPawn->bAlwaysRelevant = false;
+		CameraPawn->FinishSpawning(FTransform::Identity, true);
 		CameraPawn->SetActorLocation(PlayerStartActor[0]->GetActorLocation());
-		//FTransform Transform;
-		//Transform.SetRotation(FQuat::MakeFromEuler({0.000042, -50.597729, 0.595521}));
-		//Transform.SetLocation({ -1379.584351, 7.022931, 947.442017 });
-		//CameraPawn = GetWorld()->SpawnActor<ACameraPawn>(ACameraPawn::StaticClass(), Transform);
 		SetViewTarget(CameraPawn);
+
+		FInputModeGameAndUI InputModeGameAndUI;
+		InputModeGameAndUI.SetLockMouseToViewportBehavior(EMouseLockMode::LockAlways);
+		InputModeGameAndUI.SetHideCursorDuringCapture(false);
+		SetInputMode(InputModeGameAndUI);
+
+		UE_LOG(LogTemp, Warning, TEXT(" AMobaPlayerController::InitCamera() Spawn camera %s"), *(CameraPawn->GetName()));
 	}
+}
+
+void AMobaPlayerController::OnPossess(APawn* InPawn)
+{
+	Super::OnPossess(InPawn);
+	//ShowNetModeAndRole("AMobaPlayerController::OnPossess");
+	//UE_LOG(LogTemp, Warning, TEXT("InPawn name: %s"), *(InPawn->GetName()));
+}
+
+void AMobaPlayerController::UpdateCameraView(float CameraOffset)
+{
+	int ViewporX, ViewporY;
+	float  MousePositionX, MousePositionY;
+	
+	// WHEN HIT LEFT EGE QUICKLY I SAW X 0.0 Y 0.0 SOMETIMES RETURN FALSE
+	//GetViewportSize(ViewporX, ViewporY);
+	//GetMousePosition(MousePositionX, MousePositionY);
+
+	auto ViewportSize = UWidgetLayoutLibrary::GetViewportSize(this);
+	ViewporX = ViewportSize.X;
+	ViewporY = ViewportSize.Y;
+	auto MousePosition = UWidgetLayoutLibrary::GetMousePositionOnViewport(this);
+	MousePositionX = MousePosition.X;
+	MousePositionY = MousePosition.Y;
+	float ViewPortScale = UWidgetLayoutLibrary::GetViewportScale(GetWorld()->GetGameViewport());
+	MousePositionX *= ViewPortScale;
+	MousePositionY *= ViewPortScale;
+
+	FVector OffSet = FVector::ZeroVector;
+	//UE_LOG(LogTemp, Warning, TEXT("MousePositionX %.2f, MousePositionY %.2f"), MousePositionX, MousePositionY);
+	//GEngine->AddOnScreenDebugMessage(-1, 0.1f, FColor::Red, FString::Printf(TEXT(" %.2f | %.2f | %.2f | %.2f"), (float)ViewporX, MousePositionX, (float)ViewporY, MousePositionY));
+	if(FMath::IsNearlyEqual(MousePositionX, 0.f, 15.f))
+	{
+		OffSet.Y = -CameraOffset; 			// left 
+		if (FMath::IsNearlyEqual(MousePositionY, 0.f, 15.f))
+		{
+			OffSet.X = CameraOffset; // left up
+			//GEngine->AddOnScreenDebugMessage(-1, 0.1f, FColor::Red, FString::Printf(TEXT("left up %.2f | %.2f | %.2f | %.2f"), (float)ViewporX, MousePositionX, (float)ViewporY, MousePositionY));
+		} 
+		else if (FMath::IsNearlyEqual(MousePositionY, (float)ViewporY, 15.f))
+		{
+			OffSet.X = -CameraOffset; // left bot 
+			//GEngine->AddOnScreenDebugMessage(-1, 0.1f, FColor::Red, FString::Printf(TEXT("left bot  %.2f | %.2f | %.2f | %.2f"), (float)ViewporX, MousePositionX, (float)ViewporY, MousePositionY));
+		}
+	}
+	else if (FMath::IsNearlyEqual(MousePositionY, 0.f, 15.f))
+	{
+		OffSet.X = CameraOffset; // up 
+		if (FMath::IsNearlyEqual(MousePositionX, (float)ViewporX, 100.f))
+		{
+			OffSet.Y = CameraOffset;  // right up
+			//GEngine->AddOnScreenDebugMessage(-1, 0.1f, FColor::Red, FString::Printf(TEXT("up right %.2f | %.2f | %.2f | %.2f"), (float)ViewporX, MousePositionX, (float)ViewporY, MousePositionY));
+		} else if (FMath::IsNearlyEqual(MousePositionX, 0.f, 15.f))
+		{
+			OffSet.Y = -CameraOffset; // left up
+			//GEngine->AddOnScreenDebugMessage(-1, 0.1f, FColor::Red, FString::Printf(TEXT(" up left %.2f | %.2f | %.2f | %.2f"), (float)ViewporX, MousePositionX, (float)ViewporY, MousePositionY));
+		}
+	}
+	else if (FMath::IsNearlyEqual(MousePositionX, (float)ViewporX, 15.f))
+	{
+		OffSet.Y = CameraOffset;  // right 
+		if (FMath::IsNearlyEqual(MousePositionY, (float)ViewporY, 15.f))
+		{
+			OffSet.X = -CameraOffset;  // right bot
+			//GEngine->AddOnScreenDebugMessage(-1, 0.1f, FColor::Red, FString::Printf(TEXT("right bot %.2f | %.2f | %.2f | %.2f"), (float)ViewporX, MousePositionX, (float)ViewporY, MousePositionY));
+		}
+		else if (FMath::IsNearlyEqual(MousePositionY, 0.f, 15.f))
+		{
+			OffSet.X = CameraOffset; // right up 
+			//GEngine->AddOnScreenDebugMessage(-1, 0.1f, FColor::Red, FString::Printf(TEXT("right up %.2f | %.2f | %.2f | %.2f"), (float)ViewporX, MousePositionX, (float)ViewporY, MousePositionY));
+		}
+	}
+	else if (FMath::IsNearlyEqual(MousePositionY, (float)ViewporY, 15.f))
+	{
+		OffSet.X = -CameraOffset; // bot 
+		if (FMath::IsNearlyEqual(MousePositionX, (float)ViewporX, 15.f))
+		{
+			OffSet.Y = CameraOffset;  // right bot
+			//GEngine->AddOnScreenDebugMessage(-1, 0.1f, FColor::Red, FString::Printf(TEXT("bot right %.2f | %.2f | %.2f | %.2f"), (float)ViewporX, MousePositionX, (float)ViewporY, MousePositionY));
+		}
+		else if (FMath::IsNearlyEqual(MousePositionX, 0.f, 15.f))
+		{
+			OffSet.Y = -CameraOffset; // left bot
+			//GEngine->AddOnScreenDebugMessage(-1, 0.1f, FColor::Red, FString::Printf(TEXT("bot left %.2f | %.2f | %.2f | %.2f"), (float)ViewporX, MousePositionX, (float)ViewporY, MousePositionY));
+		}
+	}
+	CameraPawn->AddActorWorldOffset(OffSet);
 }
 
 void AMobaPlayerController::ShowNetModeAndRole(const FString& str, bool bOnScreenMsg)
 {
 	if (GetNetMode() == NM_Client)
 	{
-		if(bOnScreenMsg) GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "1 " + str + " NM_Client");
+		if (bOnScreenMsg) GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "1 " + str + " NM_Client");
 		UE_LOG(LogTemp, Warning, TEXT("1 %s NM_Client"), *str);
 	}
 	if (GetNetMode() == NM_DedicatedServer)
@@ -309,7 +318,7 @@ void AMobaPlayerController::ShowNetModeAndRole(const FString& str, bool bOnScree
 	}
 	if (GetLocalRole() == ROLE_AutonomousProxy)
 	{
-		if (bOnScreenMsg) GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "2  "+ str + " ROLE_AutonomousProxy");
+		if (bOnScreenMsg) GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "2  " + str + " ROLE_AutonomousProxy");
 		UE_LOG(LogTemp, Warning, TEXT("2  %s ROLE_AutonomousProxy"), *str);
 	}
 	if (GetLocalRole() == ROLE_Authority)
@@ -319,14 +328,7 @@ void AMobaPlayerController::ShowNetModeAndRole(const FString& str, bool bOnScree
 	}
 	if (GetLocalRole() == ROLE_SimulatedProxy)
 	{
-		if (bOnScreenMsg) GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "2 "+str+" ROLE_SimulatedProxy");
+		if (bOnScreenMsg) GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "2 " + str + " ROLE_SimulatedProxy");
 		UE_LOG(LogTemp, Warning, TEXT("2 %s ROLE_SimulatedProxy"), *str);
 	}
-}
-
-void AMobaPlayerController::OnPossess(APawn* InPawn)
-{
-	Super::OnPossess(InPawn);
-	//ShowNetModeAndRole("AMobaPlayerController::OnPossess");
-	//UE_LOG(LogTemp, Warning, TEXT("InPawn name: %s"), *(InPawn->GetName()));
 }
