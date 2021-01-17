@@ -37,41 +37,6 @@ AMobaGameMode::AMobaGameMode()
 void AMobaGameMode::BeginPlay()
 {
 	Super::BeginPlay();
-
-	//// remove the default camera actor in the level as it is not used at all
-	//TArray<AActor*> CameraActors;
-	//UGameplayStatics::GetAllActorsOfClass(GetWorld(), ACameraActor::StaticClass(), CameraActors);
-	//for (AActor* CameraActor : CameraActors)
-	//{
-	//	if (CameraActor->GetName().Contains(TEXT("CameraActor")))
-	//	{
-	//		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, FString::Printf(TEXT("AMobaGameMode::BeginPlay() Removed camera %s"), *CameraActor->GetName()));
-	//		UE_LOG(LogTemp, Warning, TEXT(" AMobaGameMode::BeginPlay() Removed default camera %s"), *(CameraActor->GetName()));
-	//		check(CameraActor->Destroy());
-	//	}
-	//}
-
-	//if (GetNetMode() != NM_DedicatedServer && GetWorld()->GetFirstPlayerController())
-	//{
-	//	ShowNetModeAndRole(" AMobaGameMode::BeginPlay()", true);
-	//	// Only spawn camera in client/listenserver mode
-	//	TArray<AActor*> PlayerStartActor;
-	//	UGameplayStatics::GetAllActorsOfClass(GetWorld(), APlayerStart::StaticClass(), PlayerStartActor);
-	//	check(PlayerStartActor.Num() == 1);
-	//	auto CameraPawn = GetWorld()->SpawnActorDeferred<ACameraPawn>(ACameraPawn::StaticClass(), FTransform::Identity, this);
-	//	CameraPawn->SetReplicates(false);
-	//	CameraPawn->bNetLoadOnClient = false;
-	//	CameraPawn->SetReplicatingMovement(false);
-	//	CameraPawn->bAlwaysRelevant = false;
-	//	CameraPawn->bRelevantForNetworkReplays = false;
-	//	CameraPawn->bReplayRewindable = false;
-	//	CameraPawn->FinishSpawning(FTransform::Identity, true);
-	//	CameraPawn->SetActorLocation(PlayerStartActor[0]->GetActorLocation());
-	//	(Cast<AMobaPlayerController>(GetWorld()->GetFirstPlayerController()))->CameraPawn = CameraPawn;
-	//	GetWorld()->GetFirstPlayerController()->SetViewTarget(CameraPawn);
-	//	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, FString::Printf(TEXT("AMobaGameMode::BeginPlay() Spawn camera %s"), *CameraPawn->GetName()));
-	//	UE_LOG(LogTemp, Warning, TEXT("AMobaGameMode::BeginPlay() Spawn camera %s"), *(CameraPawn->GetName()));
-	//}
 }
 
 void AMobaGameMode::ShowNetModeAndRole(const FString& str, bool bOnScreenMsg)

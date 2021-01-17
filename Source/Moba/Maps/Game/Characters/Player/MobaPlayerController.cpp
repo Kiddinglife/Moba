@@ -68,7 +68,7 @@ AMobaPlayerController::AMobaPlayerController()
 {
 #if WITH_SERVER_CODE
 #endif
-	CameraPawn = nullptr;
+	TopDownCamera = nullptr;
 	bShowMouseCursor = true;
 	DefaultMouseCursor = EMouseCursor::Default;
 	bAutoManageActiveCameraTarget = false;
@@ -81,19 +81,22 @@ void AMobaPlayerController::BeginPlay()
 	InputModeGameAndUI.SetLockMouseToViewportBehavior(EMouseLockMode::LockAlways);
 	InputModeGameAndUI.SetHideCursorDuringCapture(false);
 	SetInputMode(InputModeGameAndUI);
-
-	//// remove the default camera actor in the level as it is not used at all
-	//TArray<AActor*> CameraActors;
-	//UGameplayStatics::GetAllActorsOfClass(GetWorld(), ACameraActor::StaticClass(), CameraActors);
-	//for (AActor* CameraActor : CameraActors)
+	
+	// remove the default camera actor in the level as it is not used at all
+	//if (GetNetMode() == NM_Client)
 	//{
-	//	if (CameraActor->GetName() == TEXT("TopDownCameraActor"))
+	//	TArray<AActor*> CameraActors;
+	//	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ACameraActor::StaticClass(), CameraActors);
+	//	for (AActor* CameraActor : CameraActors)
 	//	{
-	//		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, FString::Printf(TEXT("AMobaPlayerController::BeginPlay()  camera %s"), *CameraActor->GetName()));
-	//		TopDownCamera = Cast<ACameraActor>(CameraActor);
+	//		if (CameraActor->GetName().Contains(TEXT("CameraActor")))
+	//		{
+	//			GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, FString::Printf(TEXT("AMobaPlayerController::BeginPlay() Removed camera %s"), *CameraActor->GetName()));
+	//			UE_LOG(LogTemp, Warning, TEXT(" AMobaPlayerController::InitCamera() Removed default camera %s"), *(CameraActor->GetName()));
+	//			check(CameraActor->Destroy());
+	//		}
 	//	}
 	//}
-	//InitCamera();
 }
 
 void AMobaPlayerController::Tick(float DeltaTime)
@@ -105,13 +108,8 @@ void AMobaPlayerController::PlayerTick(float DeltaTime)
 {
 	Super::PlayerTick(DeltaTime);
 	if (!TopDownCamera) return;
-	//CameraPawn->SetActorLocation(GetPawn()->GetActorTransform().GetLocation());
-	//CameraPawn->GetCursorToWorld()->SetWorldLocation(Hit.Location);
-	//CameraPawn->GetCursorToWorld()->SetWorldRotation(Hit.ImpactNormal.Rotation());
-	// keep updating the destination every tick while desired
 	int CursorSpeed = 2500;
 	UpdateCameraView(CursorSpeed* DeltaTime);
-	//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, FString::Printf(TEXT("%.2f"), DeltaTime));
 	MoveToMouseCursor();
 }
 
@@ -179,44 +177,6 @@ void AMobaPlayerController::OnSetDestinationReleased()
 {
 	// clear flag to indicate we should stop updating the destination
 	bMoveToMouseCursor = false;
-}
-
-void AMobaPlayerController::InitCamera()
-{
-	ShowNetModeAndRole("AMobaPlayerController::InitCamera", true);
-	// Only spawn camera in client/listenserver mode
-	if (GetNetMode() == NM_Client)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, FString::Printf(TEXT("GetNetMode() == NM_Client")));
-		// remove the default camera actor in the level as it is not used at all
-		TArray<AActor*> CameraActors;
-		UGameplayStatics::GetAllActorsOfClass(GetWorld(), ACameraActor::StaticClass(), CameraActors);
-		for (AActor* CameraActor : CameraActors)
-		{
-			GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, FString::Printf(TEXT("AMobaPlayerController::BeginPlay()  camera %s"), *CameraActor->GetName()));
-			if (CameraActor->GetName().Contains(TEXT("CameraActor")))
-			{
-				GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, FString::Printf(TEXT("AMobaPlayerController::BeginPlay() Removed camera %s"), *CameraActor->GetName()));
-				UE_LOG(LogTemp, Warning, TEXT(" AMobaPlayerController::InitCamera() Removed default camera %s"), *(CameraActor->GetName()));
-				check(CameraActor->Destroy());
-			}
-		}
-
-		TArray<AActor*> PlayerStartActor;
-		UGameplayStatics::GetAllActorsOfClass(GetWorld(), APlayerStart::StaticClass(), PlayerStartActor);
-		check(PlayerStartActor.Num() == 1);
-		//CameraPawn = GetWorld()->SpawnActor<ACameraPawn>(ACameraPawn::StaticClass(), GetPawn()->GetActorTransform());
-		//CameraPawn = GetWorld()->SpawnActor<ACameraPawn>(ACameraPawn::StaticClass());
-		CameraPawn = GetWorld()->SpawnActorDeferred<ACameraPawn>(ACameraPawn::StaticClass(), FTransform::Identity, this);
-		CameraPawn->SetReplicates(false);
-		CameraPawn->bNetLoadOnClient = false;
-		CameraPawn->SetReplicatingMovement(false);
-		CameraPawn->bAlwaysRelevant = false;
-		CameraPawn->FinishSpawning(FTransform::Identity, true);
-		CameraPawn->SetActorLocation(PlayerStartActor[0]->GetActorLocation());
-		SetViewTarget(CameraPawn);
-		UE_LOG(LogTemp, Warning, TEXT(" AMobaPlayerController::InitCamera() Spawn camera %s"), *(CameraPawn->GetName()));
-	}
 }
 
 void AMobaPlayerController::OnPossess(APawn* InPawn)

@@ -18,10 +18,8 @@ public:
 
 	/** True if the camera has been Inited */
 	uint32 bCameraInited : 1;
-	//UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-	class ACameraPawn* CameraPawn;
+	// camera is assigned from game level script
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Camera, meta = (AllowPrivateAccess = "true"))
-	//TWeakObjectPtr<class ACameraPawn> CameraPawn;
 	class ACameraActor* TopDownCamera;
 
 protected:
@@ -50,7 +48,6 @@ protected:
 
 	FHitResult Hit;
 
-	void InitCamera();
 	void ShowNetModeAndRole(const FString& str, bool bOnScreenMsg = false);
 	void UpdateCameraView(float CursorSpeed);
 };
