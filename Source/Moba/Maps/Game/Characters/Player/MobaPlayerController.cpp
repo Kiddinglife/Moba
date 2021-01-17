@@ -82,7 +82,7 @@ void AMobaPlayerController::BeginPlay()
 	InputModeGameAndUI.SetHideCursorDuringCapture(false);
 	SetInputMode(InputModeGameAndUI);
 	
-	// remove the default camera actor in the level as it is not used at all
+	 //remove the default camera actor in the level as it is not used at all
 	//if (GetNetMode() == NM_Client)
 	//{
 	//	TArray<AActor*> CameraActors;
