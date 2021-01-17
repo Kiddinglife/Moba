@@ -77,7 +77,23 @@ AMobaPlayerController::AMobaPlayerController()
 void AMobaPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
-	InitCamera();
+	FInputModeGameAndUI InputModeGameAndUI;
+	InputModeGameAndUI.SetLockMouseToViewportBehavior(EMouseLockMode::LockAlways);
+	InputModeGameAndUI.SetHideCursorDuringCapture(false);
+	SetInputMode(InputModeGameAndUI);
+
+	//// remove the default camera actor in the level as it is not used at all
+	//TArray<AActor*> CameraActors;
+	//UGameplayStatics::GetAllActorsOfClass(GetWorld(), ACameraActor::StaticClass(), CameraActors);
+	//for (AActor* CameraActor : CameraActors)
+	//{
+	//	if (CameraActor->GetName() == TEXT("TopDownCameraActor"))
+	//	{
+	//		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, FString::Printf(TEXT("AMobaPlayerController::BeginPlay()  camera %s"), *CameraActor->GetName()));
+	//		TopDownCamera = Cast<ACameraActor>(CameraActor);
+	//	}
+	//}
+	//InitCamera();
 }
 
 void AMobaPlayerController::Tick(float DeltaTime)
@@ -88,7 +104,7 @@ void AMobaPlayerController::Tick(float DeltaTime)
 void AMobaPlayerController::PlayerTick(float DeltaTime)
 {
 	Super::PlayerTick(DeltaTime);
-	if (!CameraPawn) return;
+	if (!TopDownCamera) return;
 	//CameraPawn->SetActorLocation(GetPawn()->GetActorTransform().GetLocation());
 	//CameraPawn->GetCursorToWorld()->SetWorldLocation(Hit.Location);
 	//CameraPawn->GetCursorToWorld()->SetWorldRotation(Hit.ImpactNormal.Rotation());
@@ -168,22 +184,24 @@ void AMobaPlayerController::OnSetDestinationReleased()
 void AMobaPlayerController::InitCamera()
 {
 	ShowNetModeAndRole("AMobaPlayerController::InitCamera", true);
-	// remove the default camera actor in the level as it is not used at all
-	TArray<AActor*> CameraActors;
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ACameraActor::StaticClass(), CameraActors);
-	for (AActor* CameraActor : CameraActors)
-	{
-		if (CameraActor->GetName().Contains(TEXT("CameraActor")))
-		{
-			GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, CameraActor->GetName());
-			//UE_LOG(LogTemp, Warning, TEXT(" AMobaPlayerController::InitCamera() Removed default camera %s"), *(CameraActor->GetName()));
-			check(CameraActor->Destroy());
-		}
-	}
-
 	// Only spawn camera in client/listenserver mode
-	if (GetNetMode() != NM_DedicatedServer)
+	if (GetNetMode() == NM_Client)
 	{
+		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, FString::Printf(TEXT("GetNetMode() == NM_Client")));
+		// remove the default camera actor in the level as it is not used at all
+		TArray<AActor*> CameraActors;
+		UGameplayStatics::GetAllActorsOfClass(GetWorld(), ACameraActor::StaticClass(), CameraActors);
+		for (AActor* CameraActor : CameraActors)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, FString::Printf(TEXT("AMobaPlayerController::BeginPlay()  camera %s"), *CameraActor->GetName()));
+			if (CameraActor->GetName().Contains(TEXT("CameraActor")))
+			{
+				GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, FString::Printf(TEXT("AMobaPlayerController::BeginPlay() Removed camera %s"), *CameraActor->GetName()));
+				UE_LOG(LogTemp, Warning, TEXT(" AMobaPlayerController::InitCamera() Removed default camera %s"), *(CameraActor->GetName()));
+				check(CameraActor->Destroy());
+			}
+		}
+
 		TArray<AActor*> PlayerStartActor;
 		UGameplayStatics::GetAllActorsOfClass(GetWorld(), APlayerStart::StaticClass(), PlayerStartActor);
 		check(PlayerStartActor.Num() == 1);
@@ -197,12 +215,6 @@ void AMobaPlayerController::InitCamera()
 		CameraPawn->FinishSpawning(FTransform::Identity, true);
 		CameraPawn->SetActorLocation(PlayerStartActor[0]->GetActorLocation());
 		SetViewTarget(CameraPawn);
-
-		FInputModeGameAndUI InputModeGameAndUI;
-		InputModeGameAndUI.SetLockMouseToViewportBehavior(EMouseLockMode::LockAlways);
-		InputModeGameAndUI.SetHideCursorDuringCapture(false);
-		SetInputMode(InputModeGameAndUI);
-
 		UE_LOG(LogTemp, Warning, TEXT(" AMobaPlayerController::InitCamera() Spawn camera %s"), *(CameraPawn->GetName()));
 	}
 }
@@ -216,26 +228,32 @@ void AMobaPlayerController::OnPossess(APawn* InPawn)
 
 void AMobaPlayerController::UpdateCameraView(float CameraOffset)
 {
-	int ViewporX, ViewporY;
 	float  MousePositionX, MousePositionY;
-	
 	// WHEN HIT LEFT EGE QUICKLY I SAW X 0.0 Y 0.0 SOMETIMES RETURN FALSE
-	//GetViewportSize(ViewporX, ViewporY);
-	//GetMousePosition(MousePositionX, MousePositionY);
-
-	auto ViewportSize = UWidgetLayoutLibrary::GetViewportSize(this);
-	ViewporX = ViewportSize.X;
-	ViewporY = ViewportSize.Y;
+	//if(!GetMousePosition(MousePositionX, MousePositionY)) return;
+	int ViewporX, ViewporY;
+	GetViewportSize(ViewporX, ViewporY);
+	
+	// editor will always use the newest x y. 
+	// But we cannot use this becsue it will not update when it is in real game. 
+	//auto ViewportSize = UWidgetLayoutLibrary::GetViewportSize(this);
+	//ViewporX = ViewportSize.X;
+	//ViewporY = ViewportSize.Y;
 	auto MousePosition = UWidgetLayoutLibrary::GetMousePositionOnViewport(this);
-	MousePositionX = MousePosition.X;
-	MousePositionY = MousePosition.Y;
+	// must need abs otherwise when play in editor the two viewports will have nagative mousepostion
+    // that cause a wired situation where you move in one viewport will make it move in the other viewport
+	MousePositionX = FMath::Abs(MousePosition.X);
+	MousePositionY = FMath::Abs(MousePosition.Y);
+	check(GetWorld());
+	check(GetWorld()->GetGameViewport());
 	float ViewPortScale = UWidgetLayoutLibrary::GetViewportScale(GetWorld()->GetGameViewport());
 	MousePositionX *= ViewPortScale;
 	MousePositionY *= ViewPortScale;
 
 	FVector OffSet = FVector::ZeroVector;
 	//UE_LOG(LogTemp, Warning, TEXT("MousePositionX %.2f, MousePositionY %.2f"), MousePositionX, MousePositionY);
-	//GEngine->AddOnScreenDebugMessage(-1, 0.1f, FColor::Red, FString::Printf(TEXT(" %.2f | %.2f | %.2f | %.2f"), (float)ViewporX, MousePositionX, (float)ViewporY, MousePositionY));
+	//GEngine->AddOnScreenDebugMessage(-1, 0.1f, FColor::Red, FString::Printf(TEXT(" %.2f | %.2f | %.2f | %.2f | %.2f"), ViewPortScale, (float)ViewporX, MousePositionX, (float)ViewporY, MousePositionY));
+	if (MousePositionX < 0.0f || MousePositionX > ViewporX || MousePositionY < 0.0f || MousePositionY > ViewporY) return;
 	if(FMath::IsNearlyEqual(MousePositionX, 0.f, 15.f))
 	{
 		OffSet.Y = -CameraOffset; 			// left 
@@ -291,7 +309,7 @@ void AMobaPlayerController::UpdateCameraView(float CameraOffset)
 			//GEngine->AddOnScreenDebugMessage(-1, 0.1f, FColor::Red, FString::Printf(TEXT("bot left %.2f | %.2f | %.2f | %.2f"), (float)ViewporX, MousePositionX, (float)ViewporY, MousePositionY));
 		}
 	}
-	CameraPawn->AddActorWorldOffset(OffSet);
+	TopDownCamera->AddActorWorldOffset(OffSet);
 }
 
 void AMobaPlayerController::ShowNetModeAndRole(const FString& str, bool bOnScreenMsg)

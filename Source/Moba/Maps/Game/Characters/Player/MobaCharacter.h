@@ -15,8 +15,9 @@ public:
 	AMobaCharacter();
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaSeconds) override;
+	void ToggleCameraView();
+	
 private:
 	void ShowNetModeAndRole(const FString& str, bool bOnScreenMsg = false);
-	FVector previousMovementVector;
 };
 

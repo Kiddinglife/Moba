@@ -46,8 +46,6 @@ ACameraPawn::ACameraPawn()
 void ACameraPawn::BeginPlay()
 {
 	Super::BeginPlay();
-	
-	
 }
 
 // Called every frame

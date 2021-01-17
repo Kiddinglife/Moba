@@ -30,7 +30,6 @@ AMobaCharacter::AMobaCharacter()
 {
 	// Set size for player capsule
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
-	previousMovementVector = GetActorLocation();
 
 	// Don't rotate character to camera direction
 	bUseControllerRotationPitch = false;
@@ -51,12 +50,19 @@ AMobaCharacter::AMobaCharacter()
  void AMobaCharacter::BeginPlay()
 {
 	 Super::BeginPlay();
+	 //ToggleCameraView();
 	 //ShowNetModeAndRole("AMobaPlayerController::BeginPlay");
 }
 
 void AMobaCharacter::Tick(float DeltaSeconds)
 {
     Super::Tick(DeltaSeconds);
+}
+
+void AMobaCharacter::ToggleCameraView()
+{
+	check(GetWorld()->GetFirstPlayerController());
+	GetWorld()->GetFirstPlayerController()->SetViewTargetWithBlend(this);
 }
 
 void AMobaCharacter::ShowNetModeAndRole(const FString& str, bool bOnScreenMsg)

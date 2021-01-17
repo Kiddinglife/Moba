@@ -14,6 +14,7 @@ class AMobaGameMode : public AGameModeBase
 public:
 	AMobaGameMode();
 	virtual void BeginPlay() override;
+	void ShowNetModeAndRole(const FString& str, bool bOnScreenMsg = false);
 };
 
 
