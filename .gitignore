@@ -2,6 +2,9 @@
 *
 !*/
 
+# Do not ignore README in the root of the repo.
+!/README.md
+
 # Do not ignore git files in the root of the repo.
 !/.git*
 
